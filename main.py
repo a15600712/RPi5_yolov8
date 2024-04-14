@@ -7,7 +7,7 @@ from yolo_manager import YoloDetectorWrapper
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="./models/yolov8n.pt")
+    parser.add_argument("--model", default="models/nanomodel_dataset_v7.pt")
     parser.add_argument('--debug', action=argparse.BooleanOptionalAction)
     parser.add_argument('--print_fps', action=argparse.BooleanOptionalAction)
 
