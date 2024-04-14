@@ -20,7 +20,7 @@ class RecordingSaver:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
     def __init__(self, file_path):
-        self.video_out = cv2.VideoWriter(file_path, RecordingSaver.fourcc, 30.0, (640, 480))
+        self.video_out = cv2.VideoWriter(file_path, RecordingSaver.fourcc, 30.0, (640, 640))
 
     def write(self, frame):
         self.video_out.write(frame)
@@ -118,7 +118,7 @@ class VideoThread(QThread):
 
     def run(self):
         picam2 = Picamera2()
-        camera_config = picam2.create_video_configuration(main={"size":(640,480),"format":"RGB888"}, raw={"size": (640, 480)})
+        camera_config = picam2.create_video_configuration(main={"size":(640,640),"format":"RGB888"}, raw={"size": (640, 640)})
         # camera_config = picam2.create_still_configuration(main={"size": (640, 480)}, lores={"size": (640, 480)}, display="lores")
         picam2.configure(camera_config)
         picam2.start()
@@ -130,6 +130,7 @@ class VideoThread(QThread):
 
         while self.should_run:
             frame = picam2.capture_array()
+            frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
             
             if frame is not None:
 
@@ -194,13 +195,13 @@ class App(QWidget):
         else:
             self.yolo_detector = YoloDetectorWrapper(args.model)
 
-        target_indices = {14, 15, 16}  # bird, cat, dog
-        # if we find targets in least 2 frames in a row, we start recording
-        self.detection_counter = FrameCounter(target_indices, 2)
+        target_indices = {0}  # Monkey
+        # if we find targets in least 3 frames in a row, we start recording
+        self.detection_counter = FrameCounter(target_indices, 3)
 
         self.setWindowTitle("Qt UI")
         self.disply_width = 640
-        self.display_height = 480
+        self.display_height = 640
         # create the label that holds the image
         self.image_label = QLabel(self)
         self.image_label.resize(self.disply_width, self.display_height)
