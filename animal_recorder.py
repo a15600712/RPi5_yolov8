@@ -259,7 +259,7 @@ class App(QWidget):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="./models/yolov8n.pt")
+    parser.add_argument("--model", default="/home/anon/Desktop/Mine_Project/RPi5_yolov8/models/nanomodel_dataset_v7.pt")
     parser.add_argument("--rtmp_url", type=str, default=None)
     
     parser.add_argument('--camera_test', action=argparse.BooleanOptionalAction)
