@@ -16,92 +16,6 @@ from picamera2 import Picamera2
 import subprocess
 
 
-class RecordingSaver:
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-
-    def __init__(self, file_path):
-        self.video_out = cv2.VideoWriter(file_path, RecordingSaver.fourcc, 30.0, (640, 640))
-
-    def write(self, frame):
-        self.video_out.write(frame)
-
-    def __del__(self):
-        self.video_out.release()
-
-
-class RecordingManager:
-    def __init__(self):
-        self.on_duration = -1
-        self.start_time = -1
-        self.last_flag = False
-
-        self.saver = None
-        self.video_index = 0
-        self.video_out_dir = Path('./clips/')
-        os.makedirs(self.video_out_dir, exist_ok=True)
-
-    def record(self, on_duration):
-        self.on_duration = on_duration
-        self.start_time = time.time()
-
-    def update(self, frame):
-        is_on, was_on = self.get_flags()
-
-        if is_on:
-            if self.saver is None:
-                out_filename = self.video_out_dir / f'video_{self.video_index:04d}.mp4'
-                self.video_index += 1
-                self.saver = RecordingSaver(str(out_filename))
-
-            self.saver.write(frame)
-        else:
-            # finish saver
-            if was_on:
-                del self.saver
-                self.saver = None
-
-    def get_flags(self):
-        last_flag = self.last_flag
-        is_on_flag = time.time() - self.start_time <= self.on_duration
-        self.last_flag = is_on_flag
-        return is_on_flag, last_flag
-
-    def __del__(self):
-        if self.saver is not None:
-            del self.saver
-
-class VideoBroadcaster:
-    def __init__(self, rtmp_url):
-
-        # gather video info to ffmpeg
-        fps = 30
-        width = 640
-        height = 480
-
-        # command and params for ffmpeg
-        command = ['ffmpeg',
-                '-y',
-                '-f', 'rawvideo',
-                '-vcodec', 'rawvideo',
-                '-pix_fmt', 'bgr24',
-                '-s', "{}x{}".format(width, height),
-                '-r', str(fps),
-                '-i', '-',
-                '-c:v', 'libx264',
-                '-pix_fmt', 'yuv420p',
-                '-preset', 'ultrafast',
-                '-f', 'flv',
-                '-flvflags', 'no_duration_filesize',
-                '-loglevel', 'error',
-                # "-fflags", "nobuffer",
-                # "-flags", "low_delay",
-                rtmp_url]
-
-        # using subprocess and pipe to fetch frame data
-        self.p = subprocess.Popen(command, stdin=subprocess.PIPE)
-    
-    def update(self, frame):
-        self.p.stdin.write(frame.tobytes())
 
 
 class VideoThread(QThread):
@@ -113,7 +27,6 @@ class VideoThread(QThread):
         self.should_run = True
         self.rotate_camera = rotate_camera
 
-        self.recording_manager = RecordingManager()
         self.rtmp_url = rtmp_url
 
     def run(self):
@@ -126,7 +39,7 @@ class VideoThread(QThread):
         video_broadcaster = None
         if self.rtmp_url is not None:
             print(f'streaming to {self.rtmp_url}')
-            video_broadcaster = VideoBroadcaster(rtmp_url=self.rtmp_url)
+            # video_broadcaster = VideoBroadcaster(rtmp_url=self.rtmp_url)
 
         while self.should_run:
             frame = picam2.capture_array()
@@ -139,24 +52,18 @@ class VideoThread(QThread):
 
                 if video_broadcaster is not None:
                     video_broadcaster.update(frame)
-                self.recording_manager.update(frame)
-
+                
                 if self.detect_frame:
                     self.change_pixmap_signal.emit(frame)
                     self.detect_frame = False
             else:
                 time.sleep(0.0001)
 
-        del self.recording_manager
-        self.recording_manager = None
         print('VideoThread finished!')
 
     def stop(self):
         self.should_run = False
 
-    def record_video(self):
-        if self.recording_manager is not None:
-            self.recording_manager.record(5)  # once triggered, record minimum 5 sec
 
 
 class FrameCounter:
@@ -199,7 +106,7 @@ class App(QWidget):
         # if we find targets in least 3 frames in a row, we start recording
         self.detection_counter = FrameCounter(target_indices, 3)
 
-        self.setWindowTitle("Qt UI")
+        self.setWindowTitle("Monkey Detector")
         self.disply_width = 640
         self.display_height = 640
         # create the label that holds the image
@@ -231,10 +138,10 @@ class App(QWidget):
             display_img = draw_annotation(cv_img, self.yolo_detector.get_label_names(), results)
 
             if self.detection_counter.check_detection_results(results):
-                self.thread.record_video()
-
-        fps, _ = self.fps_util.get_fps()
-        draw_fps(display_img, fps)
+                # self.thread.record_video() ##This line is for record but it can be edit to do anything
+                print("Monkey Detected Lock the lock")
+        # fps, _ = self.fps_util.get_fps()
+        # draw_fps(display_img, fps)
 
         qt_img = self.convert_cv_qt(display_img)
         self.image_label.setPixmap(qt_img)
