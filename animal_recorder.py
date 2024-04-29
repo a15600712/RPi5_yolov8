@@ -8,12 +8,9 @@ import cv2
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
 from yolo_manager import YoloDetectorWrapper
-from utils import SimpleFPS, draw_fps, draw_annotation
-import argparse
+from utils import SimpleFPS, draw_annotation, sendLineNotify
 import time
-from pathlib import Path
 from picamera2 import Picamera2
-import subprocess
 
 
 
@@ -21,38 +18,21 @@ import subprocess
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
 
-    def __init__(self, rotate_camera, rtmp_url):
+    def __init__(self):
         super().__init__()
         self.detect_frame = True
         self.should_run = True
-        self.rotate_camera = rotate_camera
-
-        self.rtmp_url = rtmp_url
 
     def run(self):
         picam2 = Picamera2()
         camera_config = picam2.create_video_configuration(main={"size":(640,640),"format":"RGB888"}, raw={"size": (640, 640)})
-        # camera_config = picam2.create_still_configuration(main={"size": (640, 480)}, lores={"size": (640, 480)}, display="lores")
         picam2.configure(camera_config)
         picam2.start()
-
-        video_broadcaster = None
-        if self.rtmp_url is not None:
-            print(f'streaming to {self.rtmp_url}')
-            # video_broadcaster = VideoBroadcaster(rtmp_url=self.rtmp_url)
 
         while self.should_run:
             frame = picam2.capture_array()
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-            
             if frame is not None:
-
-                if self.rotate_camera:
-                    frame = cv2.rotate(frame, cv2.ROTATE_180)
-
-                if video_broadcaster is not None:
-                    video_broadcaster.update(frame)
-                
                 if self.detect_frame:
                     self.change_pixmap_signal.emit(frame)
                     self.detect_frame = False
@@ -92,16 +72,10 @@ class FrameCounter:
 
 
 class App(QWidget):
-    def __init__(self, camera_test_only, rotate_camera, rtmp_url):
+    def __init__(self):
         super().__init__()
-
-        self.camera_test_only = camera_test_only
-
-        if camera_test_only:
-            self.yolo_detector = None
-        else:
-            self.yolo_detector = YoloDetectorWrapper(args.model)
-
+        self.yolo_detector = YoloDetectorWrapper("/home/anon/Desktop/Mine_Project/RPi5_yolov8/models/nano_dataset_v8.pt")
+        self.lockerstatus = False
         target_indices = {0}  # Monkey
         # if we find targets in least 2 frames in a row, we start recording
         self.detection_counter = FrameCounter(target_indices, 2)
@@ -121,7 +95,7 @@ class App(QWidget):
         self.setLayout(vbox)
 
         # create the video capture thread
-        self.thread = VideoThread(rotate_camera, rtmp_url)
+        self.thread = VideoThread()
         # connect its signal to the update_image slot
         self.thread.change_pixmap_signal.connect(self.update_image)
         # start the thread
@@ -136,12 +110,14 @@ class App(QWidget):
         else:
             results = self.yolo_detector.predict(cv_img)
             display_img = draw_annotation(cv_img, self.yolo_detector.get_label_names(), results)
-
             if self.detection_counter.check_detection_results(results):
-                # self.thread.record_video() ##This line is for record but it can be edit to do anything
-                print("Monkey Detected Lock the lock")
-        # fps, _ = self.fps_util.get_fps()
-        # draw_fps(display_img, fps)
+                if(self.lockerstatus==False):
+                    print("Lock\r\n")
+                    sendLineNotify(display_img)
+                    self.lockerstatus=True
+                else:
+                    print("Already Locked\r\n")
+
 
         qt_img = self.convert_cv_qt(display_img)
         self.image_label.setPixmap(qt_img)
@@ -165,18 +141,7 @@ class App(QWidget):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="/home/anon/Desktop/Mine_Project/RPi5_yolov8/models/nanomodel_dataset_v7.pt")
-    parser.add_argument("--rtmp_url", type=str, default=None)
-    
-    parser.add_argument('--camera_test', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--debug', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--rotate_camera', action=argparse.BooleanOptionalAction)
-
-    args = parser.parse_args()
-
-    app = QApplication(sys.argv)
-    a = App(camera_test_only=args.camera_test, rotate_camera=args.rotate_camera,
-            rtmp_url=args.rtmp_url)
+    app = QApplication([])
+    a = App()
     a.show()
     sys.exit(app.exec_())
