@@ -103,8 +103,8 @@ class App(QWidget):
             self.yolo_detector = YoloDetectorWrapper(args.model)
 
         target_indices = {0}  # Monkey
-        # if we find targets in least 3 frames in a row, we start recording
-        self.detection_counter = FrameCounter(target_indices, 3)
+        # if we find targets in least 2 frames in a row, we start recording
+        self.detection_counter = FrameCounter(target_indices, 2)
 
         self.setWindowTitle("Monkey Detector")
         self.disply_width = 640
