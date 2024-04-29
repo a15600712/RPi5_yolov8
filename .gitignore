@@ -3,4 +3,5 @@ runs/
 .idea
 __pycache__/
 clips/
-
+*.jpg
+*.ipynb
