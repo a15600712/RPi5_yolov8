@@ -48,9 +48,9 @@ def draw_annotation(img, label_names, results):
     return annotated_img
 
 def sendLineNotify(image_array):
-    t = time.time()           
-    t1 = time.localtime(t)    
-    now = time.strftime('%Y/%m/%d %H:%M:%S', t1)      
+    t = time.time()
+    t1 = time.localtime(t)
+    now = time.strftime('%Y/%m/%d %H:%M:%S', t1)
     url = 'https://notify-api.line.me/api/notify'
     token = 'TokenHere'
     headers = {
@@ -62,7 +62,7 @@ def sendLineNotify(image_array):
     image_array=cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
     # Convert numpy array to PIL Image
     image = Image.fromarray(image_array.astype('uint8'), 'RGB')
-    
+
     # Save the image to a BytesIO object
     image_file = BytesIO()
     image.save(image_file, format='JPEG')
@@ -70,8 +70,7 @@ def sendLineNotify(image_array):
 
     # Create a 'files' dictionary to hold the file data
     files = {'imageFile': image_file}
-    
+
     # Send POST request
     requests.post(url, headers=headers, data=data, files=files)
     image_file.close()  # Close the BytesIO object
-
