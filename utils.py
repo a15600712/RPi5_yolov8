@@ -19,17 +19,13 @@ def draw_annotation(img, label_names, results):
     return annotated_img
 
 def sendLineNotify(image_array):
-     # Setup folder and file naming
-    folder_path = 'saved_images'  # Define the path to your folder
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)  # Create the folder if it does not exist
-    
+
     try:
         t = time.time()
         t1 = time.localtime(t)
         now = time.strftime('%Y/%m/%d %H:%M:%S', t1)
         url = 'https://notify-api.line.me/api/notify'
-        token = 'TokenHere'
+        token = 'HxHmQgU8pNo5438asyZzMKRI7O6W5X2xRt0KEVYzQW1'
         headers = {
         'Authorization': 'Bearer ' + token
         }

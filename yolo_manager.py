@@ -1,11 +1,5 @@
-import torch
-import tensorflow as tf
 from ultralytics import YOLO
-from ultralytics.engine.results import Results
-from ultralytics.utils import ops  # for postprocess
 from pathlib import Path
-import cv2
-import numpy as np
 
 
 # .pt files contains names in there but exported onnx/tflite don't have them.

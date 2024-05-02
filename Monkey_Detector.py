@@ -30,8 +30,8 @@ class Detector():
                     frame = picam2.capture_array()
                     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
                     if frame is not None:
-                        if self.detect_frame:
-                            self.process_frame(frame)
+                    #    if self.detect_frame:
+                    	self.process_frame(frame)
                             # self.detect_frame = False
                     else:
                         time.sleep(0.0001)
