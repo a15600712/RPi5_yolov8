@@ -1,7 +1,11 @@
 import cv2
 import time
 from ultralytics.utils.plotting import Annotator
-
+import requests
+import time
+from PIL import Image
+from io import BytesIO
+import numpy as np
 
 class SimpleFPS:
     def __init__(self):
@@ -25,12 +29,6 @@ class SimpleFPS:
         return int(self.fps), is_fps_updated
 
 
-def draw_fps(img, fps):
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    # putting the FPS count on the frame
-    cv2.putText(img, str(fps), (7, 70), font, 3, (100, 255, 0), 3, cv2.LINE_AA)
-
-
 def draw_annotation(img, label_names, results):
     annotator = None
     for r in results:
@@ -48,3 +46,31 @@ def draw_annotation(img, label_names, results):
         annotated_img = img.copy()
 
     return annotated_img
+
+def sendLineNotify(image_array):
+    t = time.time()
+    t1 = time.localtime(t)
+    now = time.strftime('%Y/%m/%d %H:%M:%S', t1)
+    url = 'https://notify-api.line.me/api/notify'
+    token = 'TokenHere'
+    headers = {
+      'Authorization': 'Bearer ' + token
+    }
+    data = {
+      'message': now
+    }
+    image_array=cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+    # Convert numpy array to PIL Image
+    image = Image.fromarray(image_array.astype('uint8'), 'RGB')
+
+    # Save the image to a BytesIO object
+    image_file = BytesIO()
+    image.save(image_file, format='JPEG')
+    image_file.seek(0)  # Move the cursor to the start of the file
+
+    # Create a 'files' dictionary to hold the file data
+    files = {'imageFile': image_file}
+
+    # Send POST request
+    requests.post(url, headers=headers, data=data, files=files)
+    image_file.close()  # Close the BytesIO object
