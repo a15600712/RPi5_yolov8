@@ -5,7 +5,6 @@ import requests
 import time
 from PIL import Image
 from io import BytesIO
-import os
 
 def draw_annotation(img, label_names, results):
     annotator = Annotator(img)
@@ -25,7 +24,7 @@ def sendLineNotify(image_array):
         t1 = time.localtime(t)
         now = time.strftime('%Y/%m/%d %H:%M:%S', t1)
         url = 'https://notify-api.line.me/api/notify'
-        token = 'HxHmQgU8pNo5438asyZzMKRI7O6W5X2xRt0KEVYzQW1'
+        token = 'TokenHere'
         headers = {
         'Authorization': 'Bearer ' + token
         }
