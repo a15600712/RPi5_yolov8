@@ -5,7 +5,7 @@ from yolo_manager import YoloDetectorWrapper
 from utils import draw_annotation, sendLineNotify
 import time
 from picamera2 import Picamera2
-
+import socket
 
 class VideoThread(threading.Thread):
     def __init__(self):
@@ -61,12 +61,22 @@ class App:
         self.lockerstatus = False
         target_indices = {0}  # Assuming target index for detection
         self.detection_counter = FrameCounter(target_indices, 2)
+        
+        
+    @staticmethod
+    def connect_socket(host,port):
+        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s.connect((host,port))
+        return s
 
     def process_frame(self, cv_img):
+        host='10.20.2.162'
+        port=12345
+        connection=self.connect_socket(host,port)
         results = self.yolo_detector.predict(cv_img)
         if self.detection_counter.check_detection_results(results):
             if not self.lockerstatus:
-                print("Lock All")
+                connection.sendall("Lock1".encode())
                 sendLineNotify(draw_annotation(cv_img, self.yolo_detector.get_label_names(), results))
                 self.lockerstatus = True
             else:

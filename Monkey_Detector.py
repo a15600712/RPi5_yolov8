@@ -10,7 +10,7 @@ class Detector():
     def __init__(self):
         # self.detect_frame = True
         self.should_run = True
-        self.yolo_detector = YoloDetectorWrapper("/home/anon/Desktop/Mine_Project/RPi5_yolov8/models/nano_dataset_v8.pt")
+        self.yolo_detector = YoloDetectorWrapper("/home/anon/no gui/RPi5_yolov8/models/model_datasetv9.pt")
         self.target_indices = {0}
         self.detection_counter = FrameCounter(self.target_indices, 2)
         self.lockerstatus=False
